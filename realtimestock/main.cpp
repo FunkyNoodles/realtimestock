@@ -1,11 +1,22 @@
 #include "StockQuote.h"
 #include <iostream>
 #include <string>
+#include <boost/date_time.hpp>
+#include <thread>
+
+
+void updateTicker(std::string link) {
+	StockQuote * quote = new StockQuote(link);
+	while (true) {
+		quote->addNewPoint();
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+	}
+}
+
 
 int main() {
-	StockQuote * quote = new StockQuote();
 	std::string testLink = "http://finance.google.com/finance/info?q=NVDA";
-	std::cout << quote->getPrice(quote->getNewStockData(testLink)) << std::endl;
-	while (1);
+	std::thread ticker1(updateTicker, testLink);
+	ticker1.join();
 	return 0;
 }

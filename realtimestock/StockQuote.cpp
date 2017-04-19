@@ -7,8 +7,9 @@ using namespace rapidjson;
 using namespace std;
 
 
-StockQuote::StockQuote()
+StockQuote::StockQuote(std::string url)
 {
+	this->url = url;
 	timeSeries = new TimeSeries();
 	
 }
@@ -84,6 +85,29 @@ double StockQuote::getPercentChange(std::string stockData)
 	assert(document.HasMember("cp"));
 	assert(document["cp"].IsString());
 	return stod(document["cp"].GetString());
+}
+
+bt::ptime StockQuote::getTime(std::string stockData)
+{
+	rapidjson::Document document;
+	document.Parse(stockData.c_str());
+	assert(document.IsObject());
+	assert(document.HasMember("lt_dts"));
+	assert(document["lt_dts"].IsString());
+	bt::ptime pt;
+	std::istringstream is(document["lt_dts"].GetString());
+	is.imbue(timeFormat);
+	is >> pt;
+	return pt;
+}
+
+bool StockQuote::addNewPoint()
+{
+	std::string stockData = getNewStockData(url);
+	timeSeries->value.push_back(getPrice(stockData));
+	timeSeries->time.push_back(getTime(stockData));
+	std::cout << getPrice(stockData) << std::endl;
+	return true;
 }
 
 size_t StockQuote::curlWriteCallback(void * contents, size_t size, size_t nmemb, void * userp)
